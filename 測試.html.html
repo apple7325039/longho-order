@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LONGHO龍龍工作室｜魚姐團購限定下單</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        themeBg: '#FBF8F3',
+                        themePrimary: '#D4A373',
+                        themeSecondary: '#A5A58D',
+                        themeText: '#3F2E21'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .font-space-cute { font-family: 'Arial Black', 'Impact', sans-serif; font-weight: 900; }
+        .font-healing-hand { font-family: 'Comic Sans MS', cursive, sans-serif; font-weight: 500; }
+        .font-smile-round { font-family: 'Meiryo', 'Microsoft JhengHei', sans-serif; font-weight: bold; }
+        
+        @page { size: auto; margin: 0mm; }
+
+        /* ==================== 網頁動態預覽與列印樣式控制 ==================== */
+        .print-only-10x15, .print-only-58mm { display: none; }
+
+        @media print {
+            .no-print { display: none !important; }
+            
+            /* 10x15 標籤紙列印樣式 */
+            body.print-mode-10x15 {
+                background: #FFFFFF !important;
+                color: #000000 !important;
+                width: 100mm;
+                height: 150mm;
+                padding: 6mm;
+                margin: 0;
+                font-family: 'Microsoft JhengHei', sans-serif;
+            }
+            body.print-mode-10x15 .print-only-10x15 { display: block !important; }
+
+            /* 58mm 熱感應小票列印樣式 */
+            body.print-mode-58mm {
+                background: #FFFFFF !important;
+                color: #000000 !important;
+                width: 58mm;
+                padding: 2mm;
+                margin: 0;
+                font-family: monospace;
+            }
+            body.print-mode-58mm .print-only-58mm { display: block !important; }
+            body.print-mode-58mm .print-bold-58 { font-size: 16px !important; font-weight: bold !important; }
+            body.print-mode-58mm .print-divider-58 { border-bottom: 1px dashed #000000 !important; margin: 2mm 0; }
+        }
+    </style>
+</head>
+<body class="bg-themeBg text-themeText min-h-screen p-4 md:p-8 relative">
+
+    <div class="absolute top-4 right-4 no-print">
+        <button type="button" onclick="unlockAdminControl()" class="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-500 rounded-full shadow-sm text-sm transition-colors" title="團隊管理設定">
+            ⚙️
+        </button>
+    </div>
+
+    <div class="max-w-6xl mx-auto space-y-6 no-print">
+        
+        <div id="admin-control-panel" class="hidden bg-slate-800 text-white rounded-lg p-4 shadow-md border-l-4 border-amber-500">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-amber-400">⚙️ LONGHO 工作團隊設定控台</h3>
+                        <button type="button" onclick="closeAdminControl()" class="text-xs bg-slate-700 hover:bg-slate-600 px-1.5 py-0.5 rounded text-slate-300">隱藏控台</button>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5">送出訂單後，系統將自動依據此處設定調用印表機</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs whitespace-nowrap">列印尺寸：</span>
+                    <select id="setting-print-size" class="bg-slate-700 border border-slate-600 text-sm rounded px-3 py-1.5 font-bold text-white focus:outline-none focus:border-amber-500">
+                        <option value="10x15" selected>📄 貼紙標籤紙 (10 * 15 cm)</option>
+                        <option value="58mm">🧾 熱感應收據 (58 mm)</option>
+                        <option value="none">❌ 不列印 (僅上傳雲端)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <header class="bg-white border border-themeSecondary rounded-lg p-6 shadow-sm">
+            <h1 class="text-2xl font-bold text-center mb-4 text-themeText">LONGHO龍龍工作室｜魚姐團購限定下單</h1>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-t border-gray-100 pt-4">
+                <div>
+                    <p class="font-bold">【管道分流說明】</p>
+                    <p>本系統區分為「實體現場客」與「線上遠端客」雙軌填單機制，請依據您當前的購買情境於下方表單切換。</p>
+                    <p class="mt-2 font-bold">【交期提示】</p>
+                    <p>下定後，整體工作天為 7-14 天（不含假日）。</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded border border-gray-200 text-xs">
+                    <p class="font-bold text-themePrimary">【物流與財務規範說明】</p>
+                    <p class="mt-1">1. 目前暫未開放銀行轉帳匯款，交易一律採用<span class="font-bold text-red-700">【現場現金付款】</span>。</p>
+                    <p class="mt-1">2. 取貨管道提供「魚姐選物團購自取（免運）」或「超商純取貨」。選擇超商取貨者，<span class="font-bold text-red-700">需先支付運費 NT$ 60</span>，並請務必私訊官方帳號核對。</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <div class="lg:col-span-5 bg-white border border-themeSecondary rounded-lg p-6 space-y-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold border-b pb-2 mb-4">商品規格與展示預覽</h2>
+                    
+                    <div class="border-2 border-dashed border-themePrimary p-6 rounded-lg bg-themeBg text-center space-y-4">
+                        <p class="text-xs text-gray-400">【實時排版效果預覽】</p>
+                        <div id="preview-card" class="bg-white border border-gray-300 shadow-md p-4 mx-auto rounded flex flex-col justify-between items-center transition-all bg-no-repeat bg-cover bg-center" style="width: 220px; height: 145px;">
+                            <span id="preview-style-tag" class="text-[10px] text-themeSecondary font-bold bg-white/80 px-1.5 py-0.5 rounded shadow-sm">款式 A：經典撞色款</span>
+                            <div id="preview-text" class="text-xl tracking-wider font-space-cute text-center truncate w-full py-2" style="text-shadow: 2px 2px 4px #FFFFFF, -2px -2px 4px #FFFFFF, 2px -2px 4px #FFFFFF, -2px 2px 4px #FFFFFF;">預覽文字</div>
+                            <div class="w-full"></div> </div>
+                        <p class="text-xs text-gray-500 text-left">
+                            技術說明：成品具備立體浮雕效果，線條與圖案皆有 <span class="text-red-700 font-bold">0.5mm 最小限制</span>，超出限制可能影響堆疊精緻度。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="text-xs space-y-2 bg-gray-50 p-3 rounded border">
+                    <p class="font-bold">【商品上架與籌備清單】</p>
+                    <p>● 立體水晶姓名貼：NT$ 99 / 份（正常供貨）</p>
+                    <p class="text-gray-400">● 磁吸手機卡夾：【商品籌備中，暫不供貨】</p>
+                    <p class="text-gray-400">● 無框畫：【商品籌備中，暫不供貨】</p>
+                    <p class="text-gray-400">● 載具壓克力吊飾：【商品籌備中，暫不供貨】</p>
+                </div>
+            </div>
+
+            <form id="orderForm" onsubmit="openConfirmModal(event)" class="lg:col-span-7 bg-white border border-themeSecondary rounded-lg p-6 space-y-6">
+                <h2 class="text-lg font-bold border-b pb-2">填寫訂購資料</h2>
+                
+                <div>
+                    <label class="block text-sm font-bold mb-2">購買管道</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button type="button" id="btn-pipe-live" onclick="switchPipe('live')" class="h-12 border-2 border-themePrimary bg-themePrimary text-white font-bold rounded-md transition-all">實體現場客</button>
+                        <button type="button" id="btn-pipe-online" onclick="switchPipe('online')" class="h-12 border-2 border-themeSecondary text-themeText font-bold rounded-md transition-all">線上遠端客</button>
+                    </div>
+                    <input type="hidden" id="input-pipe" value="實體現場客">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1">選擇商品品項</label>
+                        <select id="select-main-product" onchange="checkProductStatus()" class="w-full h-12 border border-gray-300 rounded px-3 bg-white text-sm" required>
+                            <option value="立體水晶姓名貼">立體水晶姓名貼 (NT$ 99)</option>
+                            <option value="磁吸手機卡夾">磁吸手機卡夾 【籌備中】</option>
+                            <option value="無框畫">無框畫 【籌備中】</option>
+                            <option value="載具壓克力吊飾">載具壓克力吊飾 【籌備中】</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">規格/大小選擇</label>
+                        <select id="select-spec" class="w-full h-12 border border-gray-300 rounded px-3 bg-white text-sm" required>
+                            <option value="標準型 (20個/份)">標準型（20個/份，單個 3 x 1.3公分）</option>
+                            <option value="加大型 (15個/份)">加大型（15個/份，單個 4 x 1.5公分）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="warning-product-status" class="hidden bg-red-50 border border-red-300 text-red-700 text-sm p-3 rounded font-bold">
+                    ⚠️ 該品項目前為【商品籌備中】狀態，在系統正式開放供貨前，暫不開放點選與遞交下單。
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1">款式代號選擇（限單一姓名）</label>
+                        <select id="select-style" onchange="updatePreview()" class="w-full h-12 border border-gray-300 rounded px-3 bg-white text-sm" required>
+                            <option value="款式 A：經典撞色款" data-bg="https://lh3.googleusercontent.com/d/1IS69Io_TtS0-7lbvdwSq0CVZ1Sk03map">款式 A：【經典撞色款】</option>
+                            <option value="款式 B：【龍龍畢業證書款】" data-bg="">款式 B：【龍龍畢業證書款】(未設定圖片)</option>
+                            <option value="款式 C：【ALL PASS 歐趴倉鼠款】" data-bg="">款式 C：【ALL PASS 歐趴倉鼠款】(未設定圖片)</option>
+                            <option value="款式 D：【繽紛拼盤綜合款】" data-bg="">款式 D：【繽紛拼盤綜合款】(未設定圖片)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">字體樣式選擇</label>
+                        <select id="select-font" onchange="updatePreview()" class="w-full h-12 border border-gray-300 rounded px-3 bg-white text-sm" required>
+                            <option value="font-space-cute">【太空可愛體】(粗體立體感最佳)</option>
+                            <option value="font-healing-hand">【療癒手寫體】</option>
+                            <option value="font-smile-round">【微笑圓體】</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-bold">客製文字輸入框</label>
+                            <span id="char-count-msg" class="text-xs text-gray-400">中文限 5 字 / 英文限 12 字母</span>
+                        </div>
+                        <input type="text" id="input-custom-text" oninput="validateAndPreviewText()" placeholder="中字限5字 / 英字限12字" class="w-full h-12 border border-gray-300 rounded px-3 text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">訂購數量 (份)</label>
+                        <input type="number" id="input-qty" value="1" min="1" class="w-full h-12 border border-gray-300 rounded px-3 text-sm" required>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 space-y-4">
+                    <p class="text-sm font-bold text-themePrimary">基本聯絡資料與取貨</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="cust-name" placeholder="訂購人姓名" class="h-12 border border-gray-300 rounded px-3 text-sm" required>
+                        <input type="tel" id="cust-phone" placeholder="聯絡電話" class="h-12 border border-gray-300 rounded px-3 text-sm" required>
+                        <input type="text" id="cust-social" placeholder="社群帳號 (IG / 通訊軟體)" class="h-12 border border-gray-300 rounded px-3 text-sm" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-1">取貨方式選擇</label>
+                        <select id="select-delivery" onchange="toggleDeliveryFields()" class="w-full h-12 border border-gray-300 rounded px-3 bg-white text-sm" required>
+                            <option value="魚姐選物團購自取">魚姐選物團購自取（免運費）</option>
+                            <option value="超商純取貨-7-11">超商純取貨：7-11 (需先付運費 NT$ 60)</option>
+                            <option value="超商純取貨-全家">超商純取貨：全家 (需先付運費 NT$ 60)</option>
+                        </select>
+                    </div>
+
+                    <div id="logistics-block" class="hidden bg-gray-50 p-4 rounded border space-y-4">
+                        <div class="bg-amber-50 border border-amber-300 text-amber-800 text-xs p-3 rounded space-y-2">
+                            <p class="font-bold text-sm">📢 【線上遠端客重要提醒】</p>
+                            <p>選擇超商純取貨，請於下單完成後向線上客服支付 <span class="font-bold text-red-700">運費 NT$ 60</span>。請務必直接掃描下方 QR Code 或私訊官方帳號進行核對，未核對運費者恕不予排版印製！</p>
+                            <div class="flex flex-col items-center justify-center pt-2">
+                                <div class="w-32 h-32 bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center rounded text-gray-500 font-bold text-center p-2 text-[11px]">
+                                    【官方帳號 QR Code<br>圖片預留位置】
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="shipping-name" placeholder="收件人姓名" class="h-12 border border-gray-300 rounded bg-white px-3 text-sm">
+                            <input type="tel" id="shipping-phone" placeholder="收件人電話" class="h-12 border border-gray-300 rounded bg-white px-3 text-sm">
+                        </div>
+                        <input type="text" id="shipping-address" placeholder="超商門市名稱與店號" class="w-full h-12 border border-gray-300 rounded bg-white px-3 text-sm">
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-sm font-bold text-themePrimary mb-2">財務核對狀態（目前未開放匯款，僅限現金）</p>
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="border p-3 rounded text-center text-xs cursor-pointer bg-white block">
+                                <input type="radio" name="pay-live" value="現金已付款" checked class="mr-1">現金已付款
+                            </label>
+                            <label class="border p-3 rounded text-center text-xs cursor-pointer bg-white block">
+                                <input type="radio" name="pay-live" value="到店取貨付款" class="mr-1">到店取貨付款
+                            </label>
+                            <label class="border p-3 rounded text-center text-xs cursor-pointer bg-white block">
+                                <input type="radio" name="pay-live" value="未付款/待核對" class="mr-1">未付/待核對
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full h-14 bg-themeText text-white font-bold rounded-md hover:bg-black transition-colors text-base shadow-md">
+                        核對訂單細節
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden no-print">
+        <div class="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-xl border border-gray-200">
+            <h3 class="text-xl font-bold text-center border-b pb-3 text-gray-800">🔍 請確認訂單細節</h3>
+            
+            <div id="modal-alert-box" class="bg-amber-50 border border-amber-300 text-amber-800 text-xs p-3 rounded space-y-2 text-center">
+                <p class="font-bold">⚠️ 下單後請記得私訊 LONGHO 官方帳號核對訂單！</p>
+                <div class="flex justify-center pt-1">
+                    <div class="w-24 h-24 bg-gray-200 border border-dashed border-gray-400 flex items-center justify-center rounded text-gray-400 font-bold text-[9px] p-1">
+                        【QR Code 預留】
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2 text-sm bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p><strong>訂單單號：</strong> <span id="m-id" class="text-amber-700 font-mono"></span></p>
+                <p><strong>購買管道：</strong> <span id="m-pipe"></span></p>
+                <p><strong>商品品項：</strong> <span id="m-main-prod"></span></p>
+                <p><strong>商品規格：</strong> <span id="m-spec"></span></p>
+                <div class="border-t my-2 pt-2"></div>
+                <p class="text-base"><strong>✨ 客製文字：</strong> <span id="m-text" class="text-red-600 font-bold bg-yellow-100 px-2 py-0.5 rounded"></span></p>
+                <p><strong>字體風格：</strong> <span id="m-font"></span></p>
+                <p><strong>選擇款式：</strong> <span id="m-style"></span></p>
+                <p><strong>訂購數量：</strong> <span id="m-qty"></span> 份</p>
+                <p class="text-base text-amber-800"><strong>💰 應收金額：</strong> <span id="m-amount" class="font-bold"></span> 元</p>
+                <div class="border-t my-2 pt-2"></div>
+                <p><strong>客戶姓名：</strong> <span id="m-name"></span></p>
+                <p><strong>聯絡電話：</strong> <span id="m-phone"></span></p>
+                <p><strong>取貨方式：</strong> <span id="m-delivery"></span></p>
+                <p id="m-shipping-row" class="hidden"><strong>物流資訊：</strong> <span id="m-shipping"></span></p>
+                <p><strong>付款狀態：</strong> <span id="m-payment" class="font-bold text-green-700"></span></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+                <button type="button" onclick="closeConfirmModal()" class="h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition-colors">
+                    返回修改資料
+                </button>
+                <button type="button" id="btn-modal-confirm" onclick="submitFinalOrder()" class="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors shadow-md">
+                    確認無誤，送出雲端！
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="receipt-10x15" class="print-only-10x15">
+        <div style="border: 3px solid #000000; padding: 15px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000000; padding-bottom: 8px;">
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 900; margin: 0; letter-spacing: 1px;">LONGHO 龍龍工作室</h2>
+                        <p style="font-size: 11px; margin: 4px 0 0 0; color: #333;">魚姐團購分流管理單</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 13px; font-weight: 900; background-color: #000; color: #fff; padding: 3px 8px; border-radius: 4px;" id="l-id-badge">單號</span>
+                    </div>
+                </div>
+
+                <div style="background: #f0f0f0; border: 1px solid #ccc; padding: 15px; margin: 15px 0; text-align: center; border-radius: 6px;">
+                    <p style="font-size: 12px; margin: 0 0 6px 0; font-weight: bold; color: #555; text-align: left;">✨ 生產客製內容：</p>
+                    <h1 style="font-size: 38px; font-weight: 900; margin: 0; letter-spacing: 1px; word-break: break-all;" id="l-text">客製文字</h1>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; border-bottom: 1px dashed #000; padding-bottom: 12px;">
+                    <div><strong>商品品項：</strong><span id="l-main-prod"></span></div>
+                    <div><strong>規格尺寸：</strong><span id="l-spec"></span></div>
+                    <div><strong>字體風格：</strong><span id="l-font"></span></div>
+                    <div><strong>選擇款式：</strong><span id="l-style"></span></div>
+                    <div style="grid-column: span 2; font-size: 16px; margin-top: 5px;">
+                        <strong>訂購數量：</strong><span style="font-size: 22px; font-weight: 900; text-decoration: underline;" id="l-qty">1</span> 份
+                    </div>
+                </div>
+
+                <div style="font-size: 13px; margin-top: 12px; line-height: 1.6;">
+                    <p><strong>客戶姓名：</strong><span id="l-name" style="font-weight: bold;"></span> | <span id="l-phone"></span></p>
+                    <p><strong>社群帳號：</strong><span id="l-social"></span></p>
+                    <p><strong>取貨管道：</strong><span id="l-delivery" style="font-weight: bold; font-size: 14px; background: #000; color: #fff; padding: 1px 5px;"></span></p>
+                    <p id="l-shipping-row"><strong>物流詳情：</strong><span id="l-shipping"></span></p>
+                </div>
+            </div>
+
+            <div style="border-top: 2px solid #000; padding-top: 8px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                <div>
+                    <p style="margin: 0;">下單時間: <span id="l-time"></span></p>
+                    <p style="margin: 2px 0 0 0; font-weight: bold;">財務核對: <span id="l-payment" style="text-decoration: underline;"></span></p>
+                </div>
+                <div style="border: 1px solid #000; padding: 5px 10px; font-weight: bold; text-align: center; border-radius: 4px; background: #fff;">
+                    現場簽收/QC<br>【 　　　 】
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="receipt-58mm" class="print-only-58mm">
+        <div class="text-center">
+            <p class="print-bold-58">LONGHO 龍龍工作室工作單</p>
+            <p>============================</p>
+        </div>
+        <p>單號：<span id="p-id"></span></p>
+        <p>時間：<span id="p-time"></span></p>
+        <p>管道：<span id="p-pipe"></span></p>
+        <div class="print-divider-58"></div>
+        <p>購買品項：<span id="p-main-prod"></span></p>
+        <p class="print-bold-58">客製文字：<span id="p-text" style="font-size: 20px; font-weight: 900;"></span></p>
+        <p>字體風格：<span id="p-font"></span></p>
+        <p>選擇款式：<span id="p-style"></span></p>
+        <p>商品規格：<span id="p-spec"></span></p>
+        <p>訂購數量：<span id="p-qty"></span> 份</p>
+        <div class="print-divider-58"></div>
+        <p>客戶姓名：<span id="p-name"></span></p>
+        <p>客戶電話：<span id="p-phone"></span></p>
+        <p>取貨方式：<span id="p-delivery"></span></p>
+        <p id="p-shipping-row-58" class="hidden">物流資訊：<span id="p-shipping"></span></p>
+        <p>付款核對：<span id="p-payment"></span></p>
+        <p>============================</p>
+    </div>
+
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysmfTU66OqAkqZpdiYaeccxupxLTbDrAPuYdRtXEs6qmknLyR4kMMQHi5QECyslLDvGg/exec";
+        
+        // 🔒 團隊控台解鎖密碼
+        const ADMIN_PASSWORD = "longho888";
+
+        let currentPendingOrder = null;
+
+        // 網頁開啟時即自動觸發一次預覽渲染
+        window.onload = function() {
+            updatePreview();
+        };
+
+        // 🔓 彈出輸入密碼視窗
+        function unlockAdminControl() {
+            const userInput = prompt("🔑 請輸入 LONGHO 工作團隊授權密碼：");
+            if (userInput === ADMIN_PASSWORD) {
+                document.getElementById('admin-control-panel').classList.remove('hidden');
+                alert("🔓 密碼正確！已開啟團隊設定控台。");
+            } else if (userInput !== null) {
+                alert("❌ 密碼錯誤，拒減存取！");
+            }
+        }
+
+        // 🔒 手動收起控台
+        function closeAdminControl() {
+            document.getElementById('admin-control-panel').classList.add('hidden');
+        }
+
+        // 檢查商品是否籌備中
+        function checkProductStatus() {
+            const product = document.getElementById('select-main-product').value;
+            const warningBlock = document.getElementById('warning-product-status');
+            const submitBtn = document.querySelector('#orderForm button[type="submit"]');
+
+            if (product !== "立體水晶姓名貼") {
+                warningBlock.classList.remove('hidden');
+                submitBtn.setAttribute('disabled', 'disabled');
+                submitBtn.className = "w-full h-14 bg-gray-300 text-gray-500 font-bold rounded-md cursor-not-allowed text-base shadow-md";
+            } else {
+                warningBlock.classList.add('hidden');
+                submitBtn.removeAttribute('disabled');
+                submitBtn.className = "w-full h-14 bg-themeText text-white font-bold rounded-md hover:bg-black transition-colors text-base shadow-md";
+            }
+        }
+
+        // 切換購買管道
+        function switchPipe(type) {
+            const btnLive = document.getElementById('btn-pipe-live');
+            const btnOnline = document.getElementById('btn-pipe-online');
+            const inputPipe = document.getElementById('input-pipe');
+            const selectDelivery = document.getElementById('select-delivery');
+
+            if (type === 'live') {
+                btnLive.className = "h-12 border-2 border-themePrimary bg-themePrimary text-white font-bold rounded-md transition-all";
+                btnOnline.className = "h-12 border-2 border-themeSecondary text-themeText font-bold rounded-md transition-all";
+                inputPipe.value = "實體現場客";
+                selectDelivery.value = "魚姐選物團購自取";
+            } else {
+                btnLive.className = "h-12 border-2 border-themeSecondary text-themeText font-bold rounded-md transition-all";
+                btnOnline.className = "h-12 border-2 border-themePrimary bg-themePrimary text-white font-bold rounded-md transition-all";
+                inputPipe.value = "線上遠端客";
+                selectDelivery.value = "超商純取貨-7-11";
+            }
+            toggleDeliveryFields();
+        }
+
+        // 控制物流地址欄位顯示
+        function toggleDeliveryFields() {
+            const delivery = document.getElementById('select-delivery').value;
+            const logisticsBlock = document.getElementById('logistics-block');
+            const sName = document.getElementById('shipping-name');
+            const sPhone = document.getElementById('shipping-phone');
+            const sAddr = document.getElementById('shipping-address');
+
+            if (delivery === '魚姐選物團購自取') {
+                logisticsBlock.classList.add('hidden');
+                sName.removeAttribute('required');
+                sPhone.removeAttribute('required');
+                sAddr.removeAttribute('required');
+            } else {
+                logisticsBlock.classList.remove('hidden');
+                sName.setAttribute('required', 'required');
+                sPhone.setAttribute('required', 'required');
+                sAddr.setAttribute('required', 'required');
+            }
+        }
+
+        // 字數檢查與同步文字預覽
+        function validateAndPreviewText() {
+            const input = document.getElementById('input-custom-text');
+            const preview = document.getElementById('preview-text');
+            const countMsg = document.getElementById('char-count-msg');
+            const val = input.value;
+            
+            const isPureEnglish = /^[a-zA-Z\s]*$/.test(val);
+            const maxLength = isPureEnglish ? 12 : 5;
+            
+            if (val.length > maxLength) {
+                input.classList.add('border-red-600', 'bg-red-50');
+                countMsg.className = "text-xs text-red-600 font-bold";
+                countMsg.innerText = isPureEnglish ? "英文已超出 12 字限制！" : "中文已超出 5 字限制！";
+                input.value = val.slice(0, maxLength);
+                return;
+            } else {
+                input.classList.remove('border-red-600', 'bg-red-50');
+                countMsg.className = "text-xs text-gray-400";
+                countMsg.innerText = isPureEnglish ? `英文輸入中 (${val.length}/12)` : "中文限 5 字 / 英文限 12 字母";
+            }
+            preview.innerText = input.value || "預覽文字";
+        }
+
+        // 🌟 更新預覽視窗（包含動態背景圖連動功能）
+        function updatePreview() {
+            const selectStyle = document.getElementById('select-style');
+            const fontClass = document.getElementById('select-font').value;
+            const previewText = document.getElementById('preview-text');
+            const previewStyleTag = document.getElementById('preview-style-tag');
+            const previewCard = document.getElementById('preview-card');
+
+            // 讀取選中的款式選項
+            const selectedOption = selectStyle.options[selectStyle.selectedIndex];
+            const styleText = selectedOption.value;
+            
+            // 讀取 option 標籤內設定的 data-bg 雲端直連圖片網址
+            const bgUrl = selectedOption.getAttribute('data-bg');
+
+            // 渲染款式標籤文字與套用字體 class
+            previewStyleTag.innerText = styleText;
+            previewText.className = "text-xl tracking-wider text-center truncate w-full " + fontClass;
+
+            // 如果該款式有設定雲端圖片網址，則動態更換底圖；沒設定則回復純白底
+            if (bgUrl) {
+                previewCard.style.backgroundImage = `url('${bgUrl}')`;
+            } else {
+                previewCard.style.backgroundImage = "none";
+            }
+        }
+
+        // 開啟確認 Modal 彈窗
+        function openConfirmModal(event) {
+            event.preventDefault();
+
+            const now = new Date();
+            const MM = String(now.getMonth() + 1).padStart(2, '0');
+            const DD = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const randomId = String(Math.floor(Math.random() * 90) + 10);
+            
+            const orderId = `LH${MM}${DD}${hh}${mm}${randomId}`;
+
+            const pipe = document.getElementById('input-pipe').value;
+            const mainProduct = document.getElementById('select-main-product').value;
+            const style = document.getElementById('select-style').value;
+            const spec = document.getElementById('select-spec').value;
+            const customText = document.getElementById('input-custom-text').value;
+            const fontText = document.getElementById('select-font').options[document.getElementById('select-font').selectedIndex].text;
+            const qty = parseInt(document.getElementById('input-qty').value);
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const social = document.getElementById('cust-social').value;
+            const delivery = document.getElementById('select-delivery').value;
+            
+            let shippingInfo = "無";
+            if (delivery !== '魚姐選物團購自取') {
+                shippingInfo = `收件:${document.getElementById('shipping-name').value}/門市:${document.getElementById('shipping-address').value}`;
+            }
+
+            const paymentStatus = document.querySelector('input[name="pay-live"]:checked').value;
+            const totalAmount = qty * 99;
+            const formattedTime = now.toLocaleString();
+
+            currentPendingOrder = {
+                orderId, pipe, mainProduct, name, phone, social, customText, fontText, style, spec, qty, totalAmount, delivery, shippingInfo, paymentStatus, time: formattedTime
+            };
+
+            document.getElementById('m-id').innerText = orderId;
+            document.getElementById('m-pipe').innerText = pipe;
+            document.getElementById('m-main-prod').innerText = mainProduct;
+            document.getElementById('m-spec').innerText = spec;
+            document.getElementById('m-text').innerText = customText;
+            document.getElementById('m-font').innerText = fontText;
+            document.getElementById('m-style').innerText = style;
+            document.getElementById('m-qty').innerText = qty;
+            document.getElementById('m-amount').innerText = totalAmount;
+            document.getElementById('m-name').innerText = name;
+            document.getElementById('m-phone').innerText = phone;
+            document.getElementById('m-delivery').innerText = delivery;
+            
+            if (shippingInfo !== "無") {
+                document.getElementById('m-shipping-row').classList.remove('hidden');
+                document.getElementById('m-shipping').innerText = shippingInfo;
+            } else {
+                document.getElementById('m-shipping-row').classList.add('hidden');
+            }
+            document.getElementById('m-payment').innerText = paymentStatus;
+
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        // 關閉確認 Modal 彈窗
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            currentPendingOrder = null;
+        }
+
+        // 送出訂單與執行列印連動
+        function submitFinalOrder() {
+            if (!currentPendingOrder) return;
+
+            const modalBtn = document.getElementById('btn-modal-confirm');
+            modalBtn.innerText = "雲端上傳中...";
+            modalBtn.setAttribute('disabled', 'disabled');
+            modalBtn.className = "h-12 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed";
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(currentPendingOrder)
+            })
+            .then(response => {
+                const printSizeSetting = document.getElementById('setting-print-size').value;
+                
+                document.body.classList.remove('print-mode-10x15', 'print-mode-58mm');
+
+                if (printSizeSetting === '10x15') {
+                    document.body.classList.add('print-mode-10x15');
+                    document.getElementById('l-id-badge').innerText = currentPendingOrder.orderId;
+                    document.getElementById('l-text').innerText = currentPendingOrder.customText;
+                    document.getElementById('l-main-prod').innerText = currentPendingOrder.mainProduct;
+                    document.getElementById('l-spec').innerText = currentPendingOrder.spec;
+                    document.getElementById('l-font').innerText = currentPendingOrder.fontText;
+                    document.getElementById('l-style').innerText = currentPendingOrder.style;
+                    document.getElementById('l-qty').innerText = currentPendingOrder.qty;
+                    document.getElementById('l-name').innerText = currentPendingOrder.name;
+                    document.getElementById('l-phone').innerText = currentPendingOrder.phone;
+                    document.getElementById('l-social').innerText = currentPendingOrder.social;
+                    document.getElementById('l-delivery').innerText = currentPendingOrder.delivery;
+                    
+                    const shippingRow10x15 = document.getElementById('l-shipping-row');
+                    if (currentPendingOrder.shippingInfo !== "無") {
+                        shippingRow10x15.style.display = 'block';
+                        document.getElementById('l-shipping').innerText = currentPendingOrder.shippingInfo;
+                    } else {
+                        shippingRow10x15.style.display = 'none';
+                    }
+                    document.getElementById('l-time').innerText = currentPendingOrder.time;
+                    document.getElementById('l-payment').innerText = currentPendingOrder.paymentStatus;
+                    
+                    window.print();
+
+                } else if (printSizeSetting === '58mm') {
+                    document.body.classList.add('print-mode-58mm');
+                    document.getElementById('p-id').innerText = currentPendingOrder.orderId;
+                    document.getElementById('p-time').innerText = currentPendingOrder.time;
+                    document.getElementById('p-pipe').innerText = currentPendingOrder.pipe;
+                    document.getElementById('p-main-prod').innerText = currentPendingOrder.mainProduct;
+                    document.getElementById('p-text').innerText = currentPendingOrder.customText;
+                    document.getElementById('p-font').innerText = currentPendingOrder.fontText;
+                    document.getElementById('p-style').innerText = currentPendingOrder.style;
+                    document.getElementById('p-spec').innerText = currentPendingOrder.spec;
+                    document.getElementById('p-qty').innerText = currentPendingOrder.qty;
+                    document.getElementById('p-name').innerText = currentPendingOrder.name;
+                    document.getElementById('p-phone').innerText = currentPendingOrder.phone;
+                    document.getElementById('p-delivery').innerText = currentPendingOrder.delivery;
+                    
+                    if (currentPendingOrder.shippingInfo !== "無") {
+                        document.getElementById('p-shipping-row-58').classList.remove('hidden');
+                        document.getElementById('p-shipping').innerText = currentPendingOrder.shippingInfo;
+                    } else {
+                        document.getElementById('p-shipping-row-58').classList.add('hidden');
+                    }
+                    document.getElementById('p-payment').innerText = currentPendingOrder.paymentStatus;
+                    
+                    window.print();
+                    
+                } else {
+                    alert("🎉 訂單已成功上傳雲端試算表！（已依控台設定跳過列印程序）");
+                }
+
+                // 還原表單原始狀態
+                document.getElementById('confirm-modal').classList.add('hidden');
+                document.getElementById('orderForm').reset();
+                switchPipe('live');
+                document.getElementById('preview-text').innerText = "預覽文字";
+                updatePreview(); // 重置預覽底圖
+                
+                modalBtn.innerText = "確認無誤，送出雲端！";
+                modalBtn.removeAttribute('disabled');
+                modalBtn.className = "h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors shadow-md";
+                currentPendingOrder = null;
+            })
+            .catch(err => {
+                console.error("上傳失敗細節:", err);
+                alert("❌ 雲端連線失敗！請檢查網路連線。資料尚未成功寫入試算表，請勿重新整理網頁。");
+                modalBtn.innerText = "確認無誤，送出雲端！";
+                modalBtn.removeAttribute('disabled');
+                modalBtn.className = "h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors shadow-md";
+            });
+        }
+    </script>
+</body>
+</html>
